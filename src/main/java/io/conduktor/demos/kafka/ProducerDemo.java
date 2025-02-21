@@ -12,27 +12,20 @@ public class ProducerDemo {
     private static final Logger log = LoggerFactory.getLogger(ProducerDemo.class.getSimpleName());
 
     public static void main(String[] args) {
-        log.info("Hello World ...");
+        log.info("Running Producer ....");
 
-        // Create Producer Properties
+        String topic = "java_topic";
+
         Properties properties = new Properties();
-        
-        // Connect to localhost
-        properties.setProperty("bootstrap.servers", "127.0.0.1:9092");
 
-        // Set producer properties
+        properties.setProperty("bootstrap.servers", "127.0.0.1:9092");
         properties.setProperty("key.serializer", StringSerializer.class.getName());
         properties.setProperty("value.serializer", StringSerializer.class.getName());
 
-        // Create Kafka Producer
         KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
-
-        ProducerRecord<String, String> producerRecord = new ProducerRecord<>("demo_java", "hello world");
-
-        producer.send(producerRecord);
+        producer.send(new ProducerRecord<String,String>(topic, "Hello from Java VSCode - 2025-02-20 - New"));
 
         producer.flush();
-
         producer.close();
     }
 }
