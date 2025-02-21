@@ -2,8 +2,11 @@ package io.conduktor.demos.kafka;
 
 import java.util.Properties;
 
+import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.clients.producer.RoundRobinPartitioner;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +25,34 @@ public class ProducerDemo {
         properties.setProperty("key.serializer", StringSerializer.class.getName());
         properties.setProperty("value.serializer", StringSerializer.class.getName());
 
+        properties.setProperty("batch.size", "30");
+        properties.setProperty("partitioner.class", RoundRobinPartitioner.class.getName());
+
         KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
-        producer.send(new ProducerRecord<String,String>(topic, "Hello from Java VSCode - 2025-02-20 - New"));
+
+        for (int i = 0; i<30; i++) {
+
+            final var message = new ProducerRecord<>(
+                topic,
+                "key-"+i,
+                "message: "+i
+            );
+
+            producer.send(message, new Callback() {
+                @Override
+                public void onCompletion(RecordMetadata recordMetadata, Exception e) {
+                    if (e==null) {
+                        log.info("Received new metadata \n" +
+                                    "Topic: " + recordMetadata.topic() + "\n" +
+                                    "Partition: " + recordMetadata.partition() + "\n" +
+                                    "Offset: " + recordMetadata.offset() + "\n" +
+                                    "Timestamp: " + recordMetadata.timestamp());
+                    } else {
+                        log.error("Error while producing", e);
+                    }
+                }
+            });
+        }
 
         producer.flush();
         producer.close();
